@@ -546,8 +546,12 @@ pssyscall()
   {
     if(p->state == UNUSED)
     {
-      cprintf("%s \t %d  \t UNUSED  \t %d \t\t ", p->name, p->pid, p->parent->pid);
+      continue;
     }
+    // if(p->state == UNUSED)
+    // {
+    //   cprintf("%s \t %d  \t UNUSED  \t %d \t\t ", p->name, p->pid, p->parent->pid);
+    // }
     else if(p->state == EMBRYO)
     {
       cprintf("%s \t %d  \t EMBRYO  \t %d \t\t ", p->name, p->pid, p->parent->pid);
@@ -571,6 +575,10 @@ pssyscall()
     bool sib_exists = 0;
     for(struct proc *q = ptable.proc; q < &ptable.proc[NPROC]; q++)
     {
+      if(q->state == UNUSED)
+      {
+        continue;
+      }
       if(q->parent->pid == p->parent->pid && q->pid != p->pid)
       {
         cprintf("%d, ", q->pid);
