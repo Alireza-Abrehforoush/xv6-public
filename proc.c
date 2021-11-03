@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include <stdbool.h>
 
 struct {
   struct spinlock lock;
@@ -538,24 +539,49 @@ int
 pssyscall()
 {
   struct proc *p;
-  //sti();
+  sti();
   acquire(&ptable.lock);
-  cprintf("name \t pid \t state \t parent \t sibling \n");
+  cprintf("name \t pid \t state \t\t parent \t sibling \n");
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
   {
-    if(p->state == RUNNING)
+    if(p->state == UNUSED)
     {
-      cprintf("%s \t %d  \t SLEEPING  \t %d \n ", p->name, p->pid, p->parent->pid);
+      cprintf("%s \t %d  \t UNUSED  \t %d \t\t ", p->name, p->pid, p->parent->pid);
     }
-    else if(p->state == RUNNING)
+    else if(p->state == EMBRYO)
     {
-      cprintf("%s \t %d  \t RUNNING  \t %d \n ", p->name, p->pid, p->parent->pid);
+      cprintf("%s \t %d  \t EMBRYO  \t %d \t\t ", p->name, p->pid, p->parent->pid);
+    }
+    else if(p->state == SLEEPING)
+    {
+      cprintf("%s \t %d  \t SLEEPING  \t %d \t\t ", p->name, p->pid, p->parent->pid);
     }
     else if(p->state == RUNNABLE)
     {
-      cprintf("%s \t %d  \t RUNNABLE  \t %d \n ", p->name, p->pid, p->parent->pid);
+      cprintf("%s \t %d  \t RUNNABLE  \t %d \t\t ", p->name, p->pid, p->parent->pid);
     }
-    
+    else if(p->state == RUNNING)
+    {
+      cprintf("%s \t %d  \t RUNNING  \t %d \t\t ", p->name, p->pid, p->parent->pid);
+    }
+    else if(p->state == ZOMBIE)
+    {
+      cprintf("%s \t %d  \t ZOMBIE  \t %d \t\t ", p->name, p->pid, p->parent->pid);
+    }
+    bool sib_exists = 0;
+    for(struct proc *q = ptable.proc; q < &ptable.proc[NPROC]; q++)
+    {
+      if(q->parent->pid == p->parent->pid && q->pid != p->pid)
+      {
+        cprintf("%d, ", q->pid);
+        sib_exists = 1;
+      }
+    }
+    if(sib_exists == 0)
+    {
+      cprintf("NS");
+    }
+    cprintf("\n");
   }
   release(&ptable.lock);
   return 22;
